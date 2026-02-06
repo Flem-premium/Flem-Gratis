@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movie Stream</title>
+
+<style>
+body{margin:0;font-family:Arial;background:#0b0b0b;color:white}
+header{background:#111;padding:12px 20px;border-bottom:2px solid red;font-size:22px;color:red;font-weight:bold}
+.container{display:flex;flex-wrap:wrap;padding:15px;gap:20px}
+.player-box{flex:3;min-width:300px;background:#111;padding:15px;border-radius:10px;box-shadow:0 0 20px rgba(255,0,0,.2)}
+.player{position:relative;padding-top:56.25%;background:#000;border-radius:8px;overflow:hidden}
+.player iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none}
+.sidebar{flex:1;min-width:250px;background:#111;padding:10px;border-radius:10px}
+.category h3{color:red;border-bottom:1px solid #222;padding-bottom:5px}
+.movie{display:flex;gap:10px;margin:8px 0;cursor:pointer;background:#181818;padding:6px;border-radius:6px;transition:.2s}
+.movie:hover{background:#222;transform:scale(1.02)}
+.movie img{width:100px;border-radius:5px}
+
+/* Poster Play */
+#posterLayer{position:absolute;top:0;left:0;width:100%;height:100%;background-size:cover;background-position:center;display:flex;justify-content:center;align-items:center;cursor:pointer;z-index:2}
+.playBtn{width:80px;height:80px;border-radius:50%;background:red;display:flex;justify-content:center;align-items:center;font-size:40px;color:white;box-shadow:0 0 20px rgba(255,0,0,.6)}
+
+/* Ad Layer */
+#adLayer{display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:#000;color:#fff;justify-content:center;align-items:center;flex-direction:column;z-index:5;text-align:center;padding:20px}
+
+/* Loading */
+#loadingLayer{display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:#000;color:#fff;justify-content:center;align-items:center;flex-direction:column;z-index:6}
+.spinner{width:50px;height:50px;border:5px solid #ccc;border-top:5px solid red;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:15px}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+button{background:red;color:white;padding:10px 15px;border:none;border-radius:5px;cursor:pointer;font-weight:bold}
+</style>
+</head>
+
+<body>
+
+<header>MOVIE STREAM</header>
+
+<div class="container">
+<div class="player-box">
+
+<!-- Banner -->
+<div style="width:100%;margin-bottom:15px;">
+  <img id="topBanner" style="width:100%;border-radius:10px;display:block;">
+</div>
+
+<div class="player" id="player">
+  <div id="posterLayer"><div class="playBtn">▶</div></div>
+
+  <!-- Ad Screen -->
+  <div id="adLayer">
+    <div style="margin-bottom:10px">Iklan sedang diputar</div>
+    <div id="adContent" style="margin-bottom:15px">
+    </div>
+    <button id="skipBtn">Tunggu...</button>
+  </div>
+
+  <!-- Loading -->
+  <div id="loadingLayer">
+    <div class="spinner"></div>
+    <div>Menyiapkan film...</div>
+  </div>
+</div>
+
+<h2 id="title"></h2>
+</div>
+
+<div class="sidebar" id="sidebar"></div>
+</div>
+
+<script>
+// ===== BANNER =====
+const banners=[
+ "https://cdn.store.link/products/gorooshop9948990/nve7n1-%E5%86%99%E7%9C%9F%202021-10-28%20%E5%8D%88%E5%89%8D10%2009%2054_png.jpeg?versionId=yaDINV2AeDc.oC7Z_.i8w_zS288D6N8L",
+ "https://cdn.store.link/products/gorooshop9948990/cxg6qf-db7f67ee-b669-4dca-89e9-b309f3ea0ffb.jpeg?versionId=CQNeW2O_5PHTlLESJSeISIJnBqZ_xCVb",
+ "https://cdn.store.link/products/gorooshop9948990/1k2s2j-aabee074-3736-4f2b-bb42-121a70e714b1.jpeg?versionId=xJjO60odycXUvjBeAC8PqgY3bvolwxTJ",
+ "https://cdn.store.link/products/gorooshop9948990/51imfp-562bf2a1-b073-4e80-b929-519b561826c0.jpeg?versionId=bXwU52Gyhe74h6xi5m0qnDpiJQBtn1c7",
+];
+let bannerIndex=0;
+topBanner.src=banners[0];
+setInterval(()=>{bannerIndex=(bannerIndex+1)%banners.length;topBanner.src=banners[bannerIndex];},3000);
+
+// ===== IKLAN LINK CLICK (1x) =====
+let adClicked=false;
+const adLink="https://otieu.com/4/10572544";
+function openAdOnce(){
+ if(!adClicked){
+   adClicked=true;
+   window.open(adLink,"_blank");
+ }
+}
+
+// ===== FILM UTAMA =====
+const mainMovie={
+ title:"Film martial arts intens",
+ embed:"https://www.youtube.com/embed/hVZEBO4FR0Q",
+ thumb:"https://img.youtube.com/vi/hVZEBO4FR0Q/maxresdefault.jpg"
+};
+posterLayer.style.backgroundImage=`url(${mainMovie.thumb})`;
+title.innerText=mainMovie.title;
+posterLayer.onclick=()=>{openAdOnce();startAd(mainMovie.embed,mainMovie.title);};
+
+// ===== FILM KATEGORI =====
+const movies={
+ FlemHot :[{title:"SANG DEWI KEMATIAN BANGKIT KEMBALI",
+ embed:"https://www.youtube.com/embed/KuZbjBqlZmY",
+ thumb:"https://img.youtube.com/vi/KuZbjBqlZmY/maxresdefault.jpg"}],
+ Flem :[{title:"Pemburu Hantu Abadi Kembali untuk Balas Dendam!",embed:"https://www.youtube.com/embed/qGv_vrI26wA",thumb:"https://img.youtube.com/vi/qGv_vrI26wA/maxresdefault.jpg"}]
+};
+
+let html="";
+for(const cat in movies){
+ html+=`<div class="category"><h3>${cat}</h3>`;
+ movies[cat].forEach(m=>{
+  html+=`<div class="movie" onclick="openAdOnce();startAd('${m.embed}','${m.title}')">
+   <img src="${m.thumb}"><div>${m.title}</div></div>`;
+ });
+ html+="</div>";
+}
+sidebar.innerHTML=html;
+
+// ===== IKLAN → LOADING → VIDEO =====
+let selectedMovie=null;
+function startAd(embed,titleText){
+ selectedMovie={embed,title:titleText};
+ posterLayer.style.display="none";
+ adLayer.style.display="flex";
+ let count=5;
+ skipBtn.innerText="Tunggu "+count+" detik";
+ const timer=setInterval(()=>{
+  count--;
+  skipBtn.innerText="Tunggu "+count+" detik";
+  if(count<=0){
+    clearInterval(timer);
+    skipBtn.innerText="Tonton Sekarang";
+    skipBtn.onclick=playMovie;
+  }
+ },1000);
+}
+
+function playMovie(){
+ adLayer.style.display="none";
+ loadingLayer.style.display="flex";
+ setTimeout(()=>{
+  loadingLayer.style.display="none";
+  player.innerHTML+=`<iframe src="${selectedMovie.embed}" allowfullscreen></iframe>`;
+  title.innerText=selectedMovie.title;
+ },2000);
+}
+</script>
+
+</body>
+  </html>
